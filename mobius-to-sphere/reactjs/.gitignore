@@ -1,0 +1,9 @@
+
+.redo/
+node_modules/
+
+# fake lockfile
+Brewfile.lock.json
+
+# can't be arsed...
+pnpm-lock.yaml
