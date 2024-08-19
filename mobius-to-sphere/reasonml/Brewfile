@@ -1,0 +1,5 @@
+# build system
+brew "redo"
+
+# nodejs binary manager
+brew "volta"

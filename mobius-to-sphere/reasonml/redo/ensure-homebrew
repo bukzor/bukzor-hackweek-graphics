@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+BREWDIR=/opt/homebrew
+BREW=$BREWDIR/bin/brew
+linuxbrew=/home/linuxbrew/.linuxbrew
+
+i=0
+while ((i++ < 3)); do
+  if [ -d "$BREWDIR" ] && [ -x "$BREW" ]; then
+    : success!
+    exit 0
+  elif [ -d "$linuxbrew" ]; then
+    sudo ln -sf "$linuxbrew" -T "$BREWDIR"
+    continue  # start over
+  else
+    set +eu
+    eval "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    set -eu
+    continue  # start over
+  fi
+done
+
+echo 'Where'\''s homebrew?' >&2
+exit 1

@@ -1,0 +1,19 @@
+{
+  "name": "bukzor-graphics/mobius-to-sphere/reasonml",
+  "version": "0.0.0b0",
+  "description": "A ReasonML experiment, inspired by by [The Topological Problem with Voting](https://youtu.be/v5ev-RAg7Xs)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bukzor-graphics/mobius-to-sphere/reasonml": "link:"
+  },
+  "volta": {
+    "node": "20.16.0",
+    "pnpm": "9.7.1"
+  }
+}
