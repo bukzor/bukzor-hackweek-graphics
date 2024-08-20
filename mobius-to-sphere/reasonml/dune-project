@@ -1,0 +1,34 @@
+(lang dune 3.16)
+
+(name mobius_to_sphere__reasonml)
+
+(generate_opam_files true)
+
+(source
+ (github bukzor/bukzor-hackweek-graphics))
+
+(authors "Buck Evan")
+
+(maintainers "Buck Evan")  ; just me, so far
+
+(license Apache-2.0 )
+
+(documentation https://url/to/documentation)
+
+(package
+ (name mobius_to_sphere__reasonml)
+ (synopsis "A short synopsis")
+ (description "A longer description")
+ (depends
+  ocaml
+  reason
+  (ocamlformat :with-dev-setup)
+  (merlin :with-dev-setup)
+  (dune :with-dev-setup)
+  (user-setup :with-dev-setup)
+ )
+
+ (tags
+  (hackweek graphics xearning)))
+
+; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
