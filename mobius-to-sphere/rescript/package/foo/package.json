@@ -1,0 +1,26 @@
+{
+  "name": "foo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rescript build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "pnpm": {
+    "overrides": {
+      "braces@<3.0.3": ">=3.0.3"
+    }
+  },
+  "volta": {
+    "node": "20.17.0",
+    "pnpm": "9.7.1"
+  },
+  "dependencies": {
+    "foo": "link:",
+    "rescript": "^11.1.3"
+  }
+}

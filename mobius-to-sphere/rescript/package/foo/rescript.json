@@ -1,0 +1,11 @@
+{
+  "name": "foo",
+  "version": "0.0.1",
+  "package-specs": {
+    "module": "esmodule",
+    "in-source": true
+  },
+  "suffix": ".res.mjs",
+  "sources": ["."],
+  "bsc-flags": ["-bs-super-errors"]
+}
