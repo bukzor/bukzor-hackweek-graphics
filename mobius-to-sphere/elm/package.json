@@ -1,0 +1,29 @@
+{
+  "name": "elm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "elm-live Main.elm",
+    "uglify": "redo elm.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "elm": "0.19.1-6",
+    "elm-format": "^0.8.7",
+    "elm-live": "^4.0.2"
+  },
+  "devDependencies": {
+    "uglify-js": "^3.19.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "ws@>=7.0.0 <7.4.6": ">=7.4.6",
+      "http-proxy@<1.18.1": ">=1.18.1",
+      "ws@>=7.0.0 <7.5.10": ">=7.5.10"
+    }
+  }
+}

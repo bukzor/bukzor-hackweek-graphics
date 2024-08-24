@@ -1,0 +1,12 @@
+# dev environment
+node_modules/
+xpacks/
+
+# build products
+dist/
+index.html
+elm.js
+
+# build-related
+elm-stuff/
+.redo/
