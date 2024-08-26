@@ -12,15 +12,18 @@ use wasm_bindgen::prelude::*;
 
 #[derive(Default)]
 struct WinitApplication {
+    window_id: Option<WindowId>,
     window: Option<Window>,
 }
 
 impl ApplicationHandler for WinitApplication {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         log::debug!("Resumed");
-        let window_attributes = Window::default_attributes().with_title("Oh, hi!");
-
-        self.window = Some(event_loop.create_window(window_attributes).unwrap());
+        let window = event_loop
+            .create_window(Default::default())
+            .expect("failed to create initial window");
+        self.window_id = Some(window.id());
+        self.window = Some(window);
     }
     fn window_event(
         &mut self,
@@ -28,20 +31,21 @@ impl ApplicationHandler for WinitApplication {
         window_id: WindowId,
         event: WindowEvent,
     ) {
-        if window_id == self.window.as_ref().expect("Window not found").id() {
-            match event {
-                WindowEvent::CloseRequested
-                | WindowEvent::KeyboardInput {
-                    event:
-                        KeyEvent {
-                            state: ElementState::Pressed,
-                            physical_key: PhysicalKey::Code(KeyCode::Escape),
-                            ..
-                        },
-                    ..
-                } => event_loop.exit(),
-                _ => {}
-            }
+        if Some(window_id) != self.window_id {
+            return;
+        }
+        match event {
+            WindowEvent::CloseRequested
+            | WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        state: ElementState::Pressed,
+                        physical_key: PhysicalKey::Code(KeyCode::Escape),
+                        ..
+                    },
+                ..
+            } => event_loop.exit(),
+            _ => {}
         }
     }
 }
@@ -59,27 +63,25 @@ pub fn run() -> Result<()> {
 
     let event_loop = EventLoop::new()?;
 
-    #[cfg(target_arch = "wasm32")]
-    {
-        // Winit prevents sizing with CSS, so we have to set
-        // the size manually when on web.
-        use winit::dpi::PhysicalSize;
-        let _ = window.request_inner_size(PhysicalSize::new(450, 400));
+    //#[cfg(target_arch = "wasm32")]
+    //{
+    //    // Winit prevents sizing with CSS, so we have to set
+    //    // the size manually when on web.
+    //    use winit::dpi::PhysicalSize;
+    //    let _ = window.request_inner_size(PhysicalSize::new(450, 400));
 
-        use winit::platform::web::WindowExtWebSys;
-        web_sys::window()
-            .and_then(|win| win.document())
-            .and_then(|doc| {
-                let dst = doc.get_element_by_id("wasm-example")?;
-                let canvas = web_sys::Element::from(window.canvas()?);
-                dst.append_child(&canvas).ok()?;
-                Some(())
-            })
-            .expect("Couldn't append canvas to document body.");
-    }
+    //    use winit::platform::web::WindowExtWebSys;
+    //    web_sys::window()
+    //        .and_then(|win| win.document())
+    //        .and_then(|doc| {
+    //            let dst = doc.get_element_by_id("wasm-example")?;
+    //            let canvas = web_sys::Element::from(window.canvas()?);
+    //            dst.append_child(&canvas).ok()?;
+    //            Some(())
+    //        })
+    //        .expect("Couldn't append canvas to document body.");
+    //}
 
     let mut state = WinitApplication::default();
-
-    let _ = event_loop.run_app(&mut state);
-    Ok(())
+    return Ok(event_loop.run_app(&mut state)?);
 }

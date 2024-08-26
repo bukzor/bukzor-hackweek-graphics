@@ -1,0 +1,3 @@
+[submodule "mobius-to-sphere/rust/learn-wgpu"]
+	path = mobius-to-sphere/rust/learn-wgpu
+	url = /Users/buck/repo/hackweek/bukzor-graphics/mobius-to-sphere/rust/learn-wgpu
