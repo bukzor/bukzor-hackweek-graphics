@@ -1,0 +1,6 @@
+[build]
+# to change the default build target:
+###target = "wasm32-unknown-unknown"
+
+[target.wasm32-unknown-unknown]
+runner = "wasm-server-runner"

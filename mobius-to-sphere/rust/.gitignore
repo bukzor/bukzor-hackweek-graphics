@@ -1,4 +1,9 @@
+# dev environment
+node_modules/
 
 # build artifacts
 target/
 
+
+# fake lockfile :(
+Brewfile.lock.json

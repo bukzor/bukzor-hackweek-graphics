@@ -1,6 +1,6 @@
-use anyhow;
-use bukzor_learn_wasm::run;
+use anyhow::Result;
+use libbukzor_learn_wasm::run;
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     run()
 }
