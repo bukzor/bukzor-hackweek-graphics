@@ -1,10 +1,6 @@
-#![allow(dead_code, unused_imports, unused_variables)] // FIXME: only for prototyping
-
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use log::info;
-use std::convert::AsRef;
 use std::sync::Arc;
-use std::{pin::pin, rc::Rc};
 use winit::{
     application::ApplicationHandler,
     event::*,
@@ -17,6 +13,8 @@ use winit::{
 pub enum RenderState<'s> {
     #[default]
     Suspended,
+
+    #[allow(dead_code)] // I'll want this. Pretty sure.
     Active(crate::wgpu::WgpuApplication<'s>),
 }
 
@@ -31,6 +29,7 @@ struct WinitApplication<'window> {
 }
 
 impl<'window> WinitApplication<'window> {
+    #[allow(dead_code)] // I'll want this. Pretty sure.
     fn app(&self) -> &crate::wgpu::WgpuApplication {
         if let RenderState::Active(state) = &self.render_state {
             state
@@ -53,25 +52,15 @@ fn name<T: std::fmt::Debug>(this: T) -> String {
 }
 
 use futures::executor::block_on;
-// fn block_on<Fut: std::future::Future>(fut: Fut) -> Fut::Output {
-//     let waker_that_unparks_thread = core::task::Waker::noop();
-//     let mut cx = std::task::Context::from_waker(&waker_that_unparks_thread);
-//     // Pin the future so it can be polled.
-//     let mut pinned_fut = pin!(fut);
-//     loop {
-//         match pinned_fut.as_mut().poll(&mut cx) {
-//             std::task::Poll::Pending => std::thread::park(),
-//             std::task::Poll::Ready(res) => return res,
-//         }
-//     }
-// }
 
 impl<'window> ApplicationHandler for WinitApplication<'window> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         info!("Resumed (v5)");
-        let window = event_loop
-            .create_window(Default::default())
-            .expect("failed to create initial window");
+        let window = Arc::new(
+            event_loop
+                .create_window(Default::default())
+                .expect("failed to create initial window"),
+        );
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -89,19 +78,18 @@ impl<'window> ApplicationHandler for WinitApplication<'window> {
                 .expect("couldn't append canvas to document body");
         };
 
-        let app = block_on(crate::wgpu::WgpuApplication::new(&window))
+        let app = block_on(crate::wgpu::WgpuApplication::new(window.clone()))
             .unwrap_or_else(|err| panic!("{:#?}", err));
 
-        //self.render_state = RenderState::Active(ActiveRenderState { renderer, surface });
         *self = WinitApplication {
             render_state: RenderState::Active(app),
-            window: Some(Arc::new(window)),
+            window: Some(window),
         };
 
         info!("Resume complete.");
     }
 
-    fn suspended(&mut self, event_loop: &ActiveEventLoop) {
+    fn suspended(&mut self, _: &ActiveEventLoop) {
         self.render_state = RenderState::Suspended;
     }
 

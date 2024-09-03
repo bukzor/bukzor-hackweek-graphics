@@ -1,11 +1,7 @@
-#![allow(dead_code, unused_imports, unused_variables)] // FIXME: only for prototyping
-
 use anyhow::{anyhow, Result};
-use std::marker::PhantomData;
-use std::mem;
-use std::rc::Rc;
 use winit::window::Window;
 
+#[allow(dead_code)] // I'll want this. Pretty sure.
 pub struct WgpuApplication<'window> {
     pub surface: wgpu::Surface<'window>,
     pub device: wgpu::Device,
@@ -23,7 +19,7 @@ const BACKENDS: wgpu::Backends = {
 };
 
 impl<'window> WgpuApplication<'window> {
-    pub async fn new(window: &Window) -> Result<Self> {
+    pub async fn new(window: std::sync::Arc<Window>) -> Result<Self> {
         let size = window.inner_size();
         // The instance is a handle to our GPU
         // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
@@ -33,9 +29,7 @@ impl<'window> WgpuApplication<'window> {
             ..Default::default()
         });
 
-        let winref = unsafe { mem::transmute::<&'_ Window, &'window Window>(&window) };
-
-        let surface = instance.create_surface(winref)?;
+        let surface = instance.create_surface(window)?;
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
