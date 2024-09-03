@@ -1,4 +1,8 @@
-#![allow(unused_variables)] // FIXME: only for prototyping
+#![allow(unused_imports)] // FIXME: prototyping
+#![allow(dead_code)] // FIXME: prototyping
+
+use std::ops::Deref;
+use std::rc::Rc;
 
 // START(external stuff) -- copied out of wgpu crate:
 pub fn create_surface<'window>(
@@ -24,93 +28,117 @@ impl<'window> From<&'window Window> for Surface<'window> {
 }
 // END(external stuff)
 
-// Problem statement: App should own a Window and a Surface from that Window
-use anyhow::{anyhow, Error, Result};
+mod owning_ref {
+    use std::marker::PhantomData;
+    use std::ops::Deref;
 
-// impl<'a> std::ops::Deref for Surface<'a> {
-//     type Target = Box<&'a Surface<'a>>;
-//
-//     fn deref(self: &Surface<'a>) -> &Self::Target {
-//         &Box::new(self)
-//     }
-// }
+    //pub use stable_deref_trait::CloneStableDeref;
+    use stable_deref_trait::StableDeref;
 
-pub struct App<'window> {
-    _refs: owning_ref::OwningHandle<Box<WindowRef<'window>>, Box<Surface<'window>>>,
-}
+    pub struct OwnedObject<Owner, Owned>
+    where
+        Owner: StableDeref,
+        Owned: Deref,
+    {
+        pub owned: Owned,
+        pub owner: PhantomData<Owner>,
+    }
 
-use std::marker::PhantomData;
-use std::ops::Deref;
+    impl<Owner, Owned> OwnedObject<Owner, Owned>
+    where
+        Owner: StableDeref,
+        Owned: Deref,
+    {
+        pub fn try_new<F, E>(o: Owner, f: F) -> Result<Self, E>
+        where
+            F: FnOnce(*const Owner::Target) -> Result<Owned, E>,
+        {
+            let h: Owned;
+            {
+                h = f(o.deref() as *const Owner::Target)?;
+            }
 
-// An owned Window, with a borrow-lifetime attached.
-struct WindowRef<'window> {
-    oref: owning_ref::OwningRef<Box<Window>, Window>,
-    _marker: PhantomData<&'window Window>,
-}
-
-impl<'window> WindowRef<'window> {
-    fn new(window: Window) -> Self {
-        let oref: owning_ref::OwningRef<Box<Window>, Window> =
-            owning_ref::OwningRef::new(Box::new(window));
-
-        Self {
-            oref,
-            _marker: PhantomData,
+            Ok(OwnedObject {
+                owned: h,
+                owner: PhantomData,
+            })
         }
     }
 }
 
-impl<'window> From<&'window WindowRef<'window>> for Surface<'window> {
-    fn from(val: &'window WindowRef<'window>) -> Self {
-        let this = val.oref.as_owner().as_ref();
-        create_surface(this).expect("unable to create surface")
+mod lifetimed {
+    use std::marker::PhantomData;
+    use std::ops::Deref;
+
+    use stable_deref_trait::StableDeref;
+
+    pub struct ParentLifetime<'parent, Parent>
+    where
+        Parent: StableDeref,
+    {
+        pub parent: Parent,
+        pub lifetime: PhantomData<&'parent Parent>,
+    }
+
+    impl<'parent, Parent> ParentLifetime<'parent, Parent>
+    where
+        Parent: StableDeref,
+    {
+        pub fn try_new<F, E>(o: Parent, f: F) -> Result<Self, E>
+        where
+            F: FnOnce(*const Parent::Target) -> Result<Parent, E>,
+        {
+            let h: Parent;
+            {
+                h = f(o.deref() as *const Parent::Target)?;
+            }
+
+            Ok(ParentLifetime {
+                parent: h,
+                lifetime: PhantomData,
+            })
+        }
     }
 }
 
-fn surface_handle<'window>(ptr: *const WindowRef) -> Box<Surface<'window>> {
-    let owner = unsafe { &*ptr };
-    let window: &'window Window = &owner.oref;
-    let surface = create_surface(window).expect("failed to create surface");
-    Box::new(surface)
+// Problem statement: App should own a Window and a Surface from that Window
+use anyhow::{anyhow, Error, Result};
+
+#[allow(clippy::redundant_allocation)] // OwnedObject::deref has one too many dereferences
+fn surface_handle<'window>(ptr: *const Window) -> Result<Rc<Surface<'window>>> {
+    let window: &'window Window = unsafe { &*ptr };
+    let surface = create_surface(window)?;
+    Ok(Rc::new(surface))
 }
 
-// Implement ToHandle<Surface> for Window
-impl<'window> owning_ref::ToHandle for WindowRef<'window> {
-    type Handle = Box<Surface<'window>>;
-
-    unsafe fn to_handle(ptr: *const Self) -> Self::Handle {
-        let window = unsafe { &*ptr };
-        let surface = create_surface(window).expect("failed to create surface");
-        Box::new(surface)
-    }
+pub struct App<'window> {
+    window: Rc<Window>,
+    surface: Rc<Surface<'window>>,
 }
-
 impl<'window> App<'window> {
-    pub fn new(window: Window) -> Result<App<'window>> {
-        let window = WindowRef::new(window);
-        let window_and_surface =
-            owning_ref::OwningHandle::new_with_fn(Box::new(window), surface_handle);
+    pub fn new(window: Window) -> Result<Self> {
+        let window = Rc::new(window);
+
+        let handle = owning_ref::OwnedObject::try_new(window.clone(), surface_handle)?;
+        let surface = handle.owned;
 
         Ok(Self {
-            _refs: window_and_surface,
+            window,
+            surface: surface.clone(),
         })
-    }
-
-    pub fn window(&self) -> &Window {
-        *self._refs.window
-    }
-    pub fn surface(&self) -> &Surface {
-        self._refs.deref()
     }
 }
 
-fn resume(window: Window) -> Result<String> {
+fn demo(non_copy: NonCopy) -> Result<String> {
     let app = App::new(window)?;
-    let window: &Window = app.window();
-    let surface1 = &*app._refs;
-    let surface2 = &*app._refs;
+    let window = app.window.clone();
+    let surface1 = app.surface.clone();
+    let surface2 = app.surface.clone();
 
-    if std::ptr::eq(surface1, surface2) {
+    if !std::ptr::eq(&*window, &*window) {
+        println!("weird!")
+    }
+    if std::ptr::eq(&*surface1, &*surface2) {
         Ok("The two references to Surface reference the same object".to_string())
     } else {
         Err(anyhow!("Surface references are not the same"))
